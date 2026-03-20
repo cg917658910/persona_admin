@@ -42,7 +42,7 @@ catalog:
   '@nolebase/vitepress-plugin-git-changelog': ^2.18.2
   '@playwright/test': ^1.58.2
   '@pnpm/workspace.read-manifest': ^1000.2.10
-  '@stylistic/stylelint-plugin': ^4.0.1
+  '@stylistic/stylelint-plugin': ^5.0.1
   '@tailwindcss/nesting': 0.0.0-insiders.565cd3e
   '@tailwindcss/typography': ^0.5.19
   '@tanstack/vue-query': ^5.92.9
