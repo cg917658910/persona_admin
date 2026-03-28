@@ -100,11 +100,13 @@ function onTabChange(key: string | number) {
     <FormDrawer @success="onRefresh" />
 
     <div class="mb-4">
-      <Tabs
-        :active-key="currentDictKey"
-        :items="DICT_OPTIONS.map((item) => ({ key: item.key, label: item.label }))"
-        @change="onTabChange"
-      />
+      <Tabs :active-key="currentDictKey" @change="onTabChange">
+        <Tabs.TabPane
+          v-for="item in DICT_OPTIONS"
+          :key="item.key"
+          :tab="item.label"
+        />
+      </Tabs>
     </div>
 
     <Grid :table-title="dictLabels[currentDictKey]">

@@ -101,14 +101,10 @@ function onTabChange(key: string | number) {
     <FormDrawer @success="onRefresh" />
 
     <div class="mb-4">
-      <Tabs
-        :active-key="activeSubjectType"
-        :items="[
-          { key: 'character', label: '人物主题' },
-          { key: 'relation', label: '关系主题' },
-        ]"
-        @change="onTabChange"
-      />
+      <Tabs :active-key="activeSubjectType" @change="onTabChange">
+        <Tabs.TabPane key="character" :tab="'\u4eba\u7269\u4e3b\u9898'" />
+        <Tabs.TabPane key="relation" :tab="'\u5173\u7cfb\u4e3b\u9898'" />
+      </Tabs>
     </div>
 
     <Grid table-title="主题集管理">
