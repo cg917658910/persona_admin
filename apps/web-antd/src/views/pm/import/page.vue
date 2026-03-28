@@ -29,8 +29,8 @@ const rawText = ref('');
 const result = ref<any>(null);
 const loading = ref(false);
 const tabItems = [
-  { key: 'generated', label: '\u4eba\u7269\u751f\u6210\u5305\u5bfc\u5165' },
-  { key: 'relation', label: '\u5173\u7cfb\u5305\u5bfc\u5165' },
+  { key: 'generated', label: '人物生成包导入' },
+  { key: 'relation', label: '关系包导入' },
 ] as const;
 
 const uploadProps: UploadProps = {

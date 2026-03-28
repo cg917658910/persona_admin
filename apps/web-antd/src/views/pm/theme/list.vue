@@ -102,8 +102,8 @@ function onTabChange(key: string | number) {
 
     <div class="mb-4">
       <Tabs :active-key="activeSubjectType" @change="onTabChange">
-        <Tabs.TabPane key="character" :tab="'\u4eba\u7269\u4e3b\u9898'" />
-        <Tabs.TabPane key="relation" :tab="'\u5173\u7cfb\u4e3b\u9898'" />
+        <Tabs.TabPane key="character" tab="人物主题" />
+        <Tabs.TabPane key="relation" tab="关系主题" />
       </Tabs>
     </div>
 
