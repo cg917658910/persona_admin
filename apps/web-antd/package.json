@@ -20,12 +20,19 @@
     "build:analyze": "pnpm vite build --mode analyze",
     "dev": "pnpm vite --mode development",
     "preview": "vite preview",
-    "typecheck": "vue-tsc --noEmit --skipLibCheck"
+    "typecheck": "vue-tsc --noEmit --skipLibCheck",
+    "test:e2e": "playwright test",
+    "test:e2e-ui": "playwright test --ui",
+    "test:e2e-codegen": "playwright codegen"
   },
   "imports": {
     "#/*": "./src/*"
   },
   "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
+    "@tanstack/vue-query": "catalog:",
+    "@vben-core/menu-ui": "workspace:*",
+    "@vben-core/shadcn-ui": "workspace:*",
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
     "@vben/constants": "workspace:*",
@@ -43,8 +50,12 @@
     "@vueuse/core": "catalog:",
     "ant-design-vue": "catalog:",
     "dayjs": "catalog:",
+    "json-bigint": "catalog:",
     "pinia": "catalog:",
     "vue": "catalog:",
     "vue-router": "catalog:"
+  },
+  "devDependencies": {
+    "@types/json-bigint": "catalog:"
   }
 }

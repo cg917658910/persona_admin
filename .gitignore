@@ -50,3 +50,4 @@ vite.config.ts.*
 *.sw?
 .history
 .cursor
+apps/web-antd/.env.production
