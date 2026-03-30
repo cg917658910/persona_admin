@@ -2,7 +2,7 @@
 import { nextTick, ref } from 'vue';
 
 import { useVbenDrawer } from '@vben/common-ui';
-import { Alert, Input, Select } from 'ant-design-vue';
+import { Alert, Input, Select, message } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
 import { getCharacterOptions } from '#/api/pm/shared';
@@ -24,13 +24,25 @@ const [Form, formApi] = useVbenForm({
 
 const [Drawer, drawerApi] = useVbenDrawer({
   onConfirm: async () => {
-    const values = (await formApi.validate()) as any;
+    const { valid } = await formApi.validate();
+    if (!valid) {
+      return;
+    }
+    const values = await formApi.getValues();
     drawerApi.lock();
     try {
       const payload = normalizePayload(values);
-      await (id.value ? updateSong(id.value, payload) : createSong(payload));
+      if (id.value) {
+        await updateSong(id.value, payload);
+        message.success('歌曲已更新');
+      } else {
+        await createSong(payload);
+        message.success('歌曲已创建');
+      }
       emits('success');
       drawerApi.close();
+    } catch (error: any) {
+      message.error(error?.message || '歌曲保存失败');
     } finally {
       drawerApi.unlock();
     }
@@ -47,7 +59,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
 async function setupForm() {
   await (formApi as any).resetForm();
   if (characterOptions.value.length === 0) {
-    characterOptions.value = await getCharacterOptions();
+    characterOptions.value = await getCharacterOptions('id');
   }
   const data = drawerApi.getData<any>() || {};
   id.value = data?.id;
@@ -75,6 +87,7 @@ function splitTags(value: string | string[] | undefined) {
 function toFormValues(detail: any) {
   return {
     ...detail,
+    characterId: String(detail.characterId || drawerApi.getData<any>()?.characterId || ''),
     emotionalCurve: (detail.emotionalCurve || []).join(', '),
     styles: (detail.styles || []).join(', '),
   };
@@ -83,6 +96,7 @@ function toFormValues(detail: any) {
 function normalizePayload(values: any) {
   return {
     ...values,
+    characterId: String(values.characterId || '').trim(),
     emotionalCurve: splitTags(values.emotionalCurve),
     styles: splitTags(values.styles),
   };
@@ -92,12 +106,13 @@ function normalizePayload(values: any) {
 <template>
   <Drawer :title="id ? '编辑歌曲' : '新建歌曲'" class="w-[900px]">
     <Form>
-      <template #characterSlug="slotProps">
+      <template #characterId="slotProps">
         <Select
-          v-bind="slotProps"
+          :value="slotProps.modelValue"
           show-search
           :options="characterOptions"
           placeholder="选择关联人物"
+          @update:value="slotProps['onUpdate:modelValue']"
         />
       </template>
       <template #coverUrl="slotProps">

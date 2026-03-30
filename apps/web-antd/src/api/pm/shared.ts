@@ -20,6 +20,7 @@ export namespace PmSharedApi {
   }
 
   export interface CharacterOptionItem {
+    id?: number | string;
     slug: string;
     name?: string;
   }
@@ -65,13 +66,14 @@ export function buildPageParams(params: Recordable<any>) {
   };
 }
 
-function toOptionList<T extends { slug: string }>(
+function toOptionList<T extends { slug: string; id?: number | string }>(
   items: T[],
   labelKey: keyof T,
+  valueField: 'id' | 'slug' = 'slug',
 ): PmSharedApi.SimpleOption[] {
   return (items || []).map((item) => ({
     label: String(item[labelKey] || item.slug),
-    value: item.slug,
+    value: String(valueField === 'id' ? item.id || item.slug : item.slug),
   }));
 }
 
@@ -134,24 +136,33 @@ export async function getThemeOptions(
   return await queryThemeOptions(subjectType);
 }
 
-export async function queryCharacterOptions(keyword = '') {
+export async function queryCharacterOptions(
+  keyword = '',
+  valueField: 'id' | 'slug' = 'slug',
+) {
   try {
     const items = await getPageItems<PmSharedApi.CharacterOptionItem>(
       '/admin/characters/page',
       { keyword },
     );
-    return toOptionList(items, 'name');
+    return toOptionList(items, 'name', valueField);
   } catch {
-    return [
-      { label: '林黛玉', value: 'lin-daiyu' },
-      { label: '孙悟空', value: 'sun-wu-kong' },
-      { label: '贾宝玉', value: 'jia-baoyu' },
-    ];
+    return valueField === 'id'
+      ? [
+          { label: '林黛玉', value: '1' },
+          { label: '孙悟空', value: '2' },
+          { label: '贾宝玉', value: '3' },
+        ]
+      : [
+          { label: '林黛玉', value: 'lin-daiyu' },
+          { label: '孙悟空', value: 'sun-wu-kong' },
+          { label: '贾宝玉', value: 'jia-baoyu' },
+        ];
   }
 }
 
-export async function getCharacterOptions() {
-  return await queryCharacterOptions();
+export async function getCharacterOptions(valueField: 'id' | 'slug' = 'slug') {
+  return await queryCharacterOptions('', valueField);
 }
 
 export async function queryRelationOptions(keyword = '') {

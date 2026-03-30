@@ -41,7 +41,7 @@ export function useFormSchema(): VbenFormSchema[] {
     { component: 'Input', fieldName: 'slug', label: 'Slug', rules: 'required' },
     {
       component: 'Input',
-      fieldName: 'characterSlug',
+      fieldName: 'characterId',
       label: 'Character',
       rules: 'required',
     },

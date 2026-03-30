@@ -4,7 +4,7 @@ import type { PmDictApi } from '#/api/pm/dict';
 
 import { h } from 'vue';
 
-import { Button, Space, Tag } from 'ant-design-vue';
+import { Button, Space, Tag, Tooltip } from 'ant-design-vue';
 
 import { dictLabels } from '#/api/pm/dict';
 
@@ -22,6 +22,39 @@ export const DICT_OPTIONS: Array<{
   { key: 'regions', label: dictLabels.regions },
 ];
 
+export const motivationCategoryOptions = [
+  { label: '核心驱动力', value: 'core' },
+  { label: '次级驱动力', value: 'secondary' },
+];
+
+export const regionTypeOptions = [
+  { label: '国家', value: 'country' },
+  { label: '地区', value: 'area' },
+  { label: '城市', value: 'city' },
+  { label: '虚构地点', value: 'fictional' },
+  { label: '历史区域', value: 'historical_region' },
+];
+
+export function needsDescription(_dictKey: PmDictApi.DictKey) {
+  return true;
+}
+
+export function needsCategory(dictKey: PmDictApi.DictKey) {
+  return dictKey === 'motivations';
+}
+
+export function needsRegionType(dictKey: PmDictApi.DictKey) {
+  return dictKey === 'regions';
+}
+
+export function needsParent(dictKey: PmDictApi.DictKey) {
+  return dictKey === 'regions' || dictKey === 'culturalRegions';
+}
+
+export function needsCoverUrl(dictKey: PmDictApi.DictKey) {
+  return dictKey === 'regions' || dictKey === 'culturalRegions';
+}
+
 export function useGridFormSchema(): VbenFormSchema[] {
   return [
     {
@@ -30,18 +63,83 @@ export function useGridFormSchema(): VbenFormSchema[] {
       label: '关键词',
       componentProps: {
         allowClear: true,
-        placeholder: '搜索 code 或名称',
+        placeholder: '搜索 code、名称或说明',
       },
     },
   ];
 }
 
+function textCell(text?: string, maxWidth = 240) {
+  const value = String(text || '').trim();
+  if (!value) {
+    return '-';
+  }
+  return h(
+    Tooltip,
+    { title: value },
+    () =>
+      h(
+        'span',
+        {
+          style: {
+            display: 'inline-block',
+            maxWidth: `${maxWidth}px`,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            verticalAlign: 'bottom',
+            whiteSpace: 'nowrap',
+          },
+        },
+        value,
+      ),
+  );
+}
+
 export function useColumns<T extends PmDictApi.DictItem>(
+  dictKey: PmDictApi.DictKey,
   onActionClick: (params: DictActionParams<T>) => void,
 ): VxeTableGridOptions['columns'] {
-  return [
-    { field: 'code', title: 'Code', minWidth: 180 },
-    { field: 'name', title: '名称', minWidth: 200 },
+  const columns: NonNullable<VxeTableGridOptions['columns']> = [
+    { field: 'code', title: 'Code', minWidth: 160 },
+    { field: 'name', title: '名称', minWidth: 180 },
+  ];
+
+  if (needsCategory(dictKey)) {
+    columns.push({
+      field: 'category',
+      title: '分类',
+      width: 120,
+    });
+  }
+
+  if (needsRegionType(dictKey)) {
+    columns.push({
+      field: 'regionType',
+      title: '地区类型',
+      width: 140,
+    });
+  }
+
+  if (needsParent(dictKey)) {
+    columns.push({
+      field: 'parentCode',
+      title: '父级',
+      minWidth: 140,
+    });
+  }
+
+  if (needsDescription(dictKey)) {
+    columns.push({
+      field: 'description',
+      title: '说明',
+      minWidth: 220,
+      slots: {
+        default: ({ row }: any) => textCell(row.description),
+      },
+    });
+  }
+
+  columns.push(
     { field: 'sortOrder', title: '排序', width: 100 },
     {
       field: 'isActive',
@@ -85,5 +183,7 @@ export function useColumns<T extends PmDictApi.DictItem>(
           ]),
       },
     },
-  ];
+  );
+
+  return columns;
 }

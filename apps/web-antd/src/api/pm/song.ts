@@ -18,6 +18,7 @@ export namespace PmSongApi {
     coverUrl?: string;
     audioUrl?: string;
     status?: string;
+    characterId?: string;
     characterSlug?: string;
     characterName?: string;
     styles?: string[];
@@ -29,6 +30,7 @@ export namespace PmSongApi {
 }
 
 const baseUrl = '/admin/songs';
+const useMock = import.meta.env.VITE_PM_ADMIN_USE_MOCK === 'true';
 
 function filterItems(items: PmSongApi.SongItem[], params: Record<string, any>) {
   const keyword = String(params.keyword || '').trim().toLowerCase();
@@ -74,30 +76,27 @@ export async function getSongDetail(id: string) {
 }
 
 export async function createSong(payload: Record<string, any>) {
-  try {
-    const res = await requestClient.post<any>(baseUrl, payload);
-    return normalizeDetailResult<PmSongApi.SongItem>(res);
-  } catch {
+  if (useMock) {
     return (await createSongMock(payload)) as PmSongApi.SongItem;
   }
+  const res = await requestClient.post<any>(baseUrl, payload);
+  return normalizeDetailResult<PmSongApi.SongItem>(res);
 }
 
 export async function updateSong(id: string, payload: Record<string, any>) {
-  try {
-    const res = await requestClient.request<any>(`${baseUrl}/${id}`, {
-      method: 'PATCH',
-      data: payload,
-    });
-    return normalizeDetailResult<PmSongApi.SongItem>(res);
-  } catch {
+  if (useMock) {
     return (await updateSongMock(id, payload)) as PmSongApi.SongItem;
   }
+  const res = await requestClient.request<any>(`${baseUrl}/${id}`, {
+    method: 'PATCH',
+    data: payload,
+  });
+  return normalizeDetailResult<PmSongApi.SongItem>(res);
 }
 
 export async function deleteSong(id: string) {
-  try {
-    return await requestClient.delete<any>(`${baseUrl}/${id}`);
-  } catch {
+  if (useMock) {
     return await deleteSongMock(id);
   }
+  return await requestClient.delete<any>(`${baseUrl}/${id}`);
 }

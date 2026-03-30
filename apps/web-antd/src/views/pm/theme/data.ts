@@ -33,7 +33,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
       label: '关键词',
       componentProps: {
         allowClear: true,
-        placeholder: '搜索主题名称 / slug / code / 简介',
+        placeholder: '搜索主题名称、slug、code、简介',
       },
     },
     {

@@ -30,7 +30,7 @@ const [Grid, gridApi] = useVbenVxeGrid({
     submitOnChange: true,
   },
   gridOptions: {
-    columns: useColumns(onActionClick),
+    columns: useColumns(currentDictKey.value, onActionClick),
     height: 'auto',
     keepSource: true,
     proxyConfig: {
@@ -91,6 +91,9 @@ function onCreate() {
 
 function onTabChange(key: string | number) {
   currentDictKey.value = key as PmDictApi.DictKey;
+  gridApi.setGridOptions({
+    columns: useColumns(currentDictKey.value, onActionClick),
+  });
   onRefresh();
 }
 </script>

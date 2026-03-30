@@ -9,15 +9,19 @@ export namespace PmDictApi {
     | 'creatorTypes'
     | 'regions'
     | 'culturalRegions'
-    | 'motivations'
-    | 'themeCategories';
+    | 'motivations';
 
   export interface DictItem {
     id?: number | string;
     code: string;
+    name: string;
+    description?: string;
+    category?: string;
+    regionType?: string;
+    parentCode?: string;
+    coverUrl?: string;
     dictKey?: DictKey;
     isActive?: boolean;
-    name: string;
     sortOrder?: number;
   }
 }
@@ -28,7 +32,6 @@ export const dictLabels: Record<PmDictApi.DictKey, string> = {
   culturalRegions: '文化区域',
   motivations: '驱动力',
   regions: '地区',
-  themeCategories: '主题分类',
   workTypes: '作品类型',
 };
 
@@ -38,11 +41,29 @@ const fallbackCache: Record<PmDictApi.DictKey, PmDictApi.DictItem[]> = {
   culturalRegions: [],
   motivations: [],
   regions: [],
-  themeCategories: [],
   workTypes: [],
 };
 
 const baseUrl = '/admin/dicts';
+
+function normalizeDictItem(
+  dictKey: PmDictApi.DictKey,
+  item?: Partial<PmDictApi.DictItem> | null,
+): PmDictApi.DictItem {
+  return {
+    code: item?.code || '',
+    coverUrl: item?.coverUrl || '',
+    category: item?.category || '',
+    description: item?.description || '',
+    dictKey,
+    id: item?.id,
+    isActive: item?.isActive ?? true,
+    name: item?.name || '',
+    parentCode: item?.parentCode || '',
+    regionType: item?.regionType || '',
+    sortOrder: item?.sortOrder ?? 100,
+  };
+}
 
 export async function getDictPage(
   dictKey: PmDictApi.DictKey,
@@ -53,14 +74,25 @@ export async function getDictPage(
     const res = await requestClient.get<any>(`${baseUrl}/${dictKey}/page`, {
       params: query,
     });
-    return normalizePageResult<PmDictApi.DictItem>(res);
+    const page = normalizePageResult<PmDictApi.DictItem>(res);
+    return {
+      ...page,
+      items: page.items.map((item) => normalizeDictItem(dictKey, item)),
+    };
   } catch {
     const keyword = String(query.keyword || '').trim().toLowerCase();
     const items = fallbackCache[dictKey].filter((item) => {
       if (!keyword) {
         return true;
       }
-      return [item.code, item.name]
+      return [
+        item.code,
+        item.name,
+        item.description,
+        item.parentCode,
+        item.category,
+        item.regionType,
+      ]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(keyword));
     });
@@ -84,18 +116,13 @@ export async function getDictItems(dictKey: PmDictApi.DictKey) {
 export async function getDictDetail(dictKey: PmDictApi.DictKey, id: string) {
   try {
     const res = await requestClient.get<any>(`${baseUrl}/${dictKey}/${id}`);
-    return normalizeDetailResult<PmDictApi.DictItem>(res);
+    return normalizeDictItem(dictKey, normalizeDetailResult<PmDictApi.DictItem>(res));
   } catch {
-    return (
+    return normalizeDictItem(
+      dictKey,
       fallbackCache[dictKey].find(
         (item) => String(item.id) === String(id) || item.code === id,
-      ) || {
-        code: '',
-        dictKey,
-        isActive: true,
-        name: '',
-        sortOrder: 100,
-      }
+      ),
     );
   }
 }
@@ -106,16 +133,13 @@ export async function createDictItem(
 ) {
   try {
     const res = await requestClient.post<any>(`${baseUrl}/${dictKey}`, payload);
-    return normalizeDetailResult<PmDictApi.DictItem>(res);
+    return normalizeDictItem(dictKey, normalizeDetailResult<PmDictApi.DictItem>(res));
   } catch {
-    const item: PmDictApi.DictItem = {
+    const item = normalizeDictItem(dictKey, {
+      ...payload,
       code: payload.code || `${dictKey}-${Date.now()}`,
-      dictKey,
       id: payload.id ?? Date.now(),
-      isActive: payload.isActive ?? true,
-      name: payload.name || payload.code || '',
-      sortOrder: payload.sortOrder ?? 100,
-    };
+    });
     fallbackCache[dictKey].unshift(item);
     return item;
   }
@@ -131,19 +155,16 @@ export async function updateDictItem(
       method: 'PATCH',
       data: payload,
     });
-    return normalizeDetailResult<PmDictApi.DictItem>(res);
+    return normalizeDictItem(dictKey, normalizeDetailResult<PmDictApi.DictItem>(res));
   } catch {
     const index = fallbackCache[dictKey].findIndex(
       (item) => String(item.id) === String(id) || item.code === id,
     );
     if (index >= 0) {
-      const current = fallbackCache[dictKey][index]!;
-      fallbackCache[dictKey][index] = {
-        ...current,
+      fallbackCache[dictKey][index] = normalizeDictItem(dictKey, {
+        ...fallbackCache[dictKey][index],
         ...payload,
-        code: payload.code ?? current.code,
-        name: payload.name ?? current.name,
-      };
+      });
       return fallbackCache[dictKey][index]!;
     }
     return await createDictItem(dictKey, payload);
